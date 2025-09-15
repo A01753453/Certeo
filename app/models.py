@@ -1,49 +1,33 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, Text, ForeignKey, BigInteger, CheckConstraint, CHAR
-from sqlalchemy.dialects.sqlite import BLOB
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
-from sqlalchemy.types import LargeBinary
-from sqlalchemy.sql import func
-from sqlalchemy import Integer
-
-from .db import Base
-
-def gen_uuid():
-    return str(uuid.uuid4())
+from app.database import Base
 
 class Empresa(Base):
-    __tablename__ = "empresa"
-    id = Column(String, primary_key=True, default=gen_uuid)
-    nombre = Column(Text, nullable=False)
-    rfc = Column(Text, nullable=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    __tablename__ = "empresas"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    rfc = Column(String, nullable=False, unique=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
-    load_files = relationship("LoadFile", back_populates="empresa")
+    jobs = relationship("Job", back_populates="empresa", cascade="all, delete-orphan")
 
-class LoadFile(Base):
-    __tablename__ = "load_file"
-    id = Column(String, primary_key=True, default=gen_uuid)
-    empresa_id = Column(String, ForeignKey("empresa.id"), nullable=False)
-    filename = Column(Text, nullable=False)
-    sha256 = Column(CHAR(64), nullable=False)
-    size_bytes = Column(BigInteger, nullable=False)
-    uploaded_at = Column(DateTime(timezone=True), server_default=func.now())
-    processed_at = Column(DateTime(timezone=True), nullable=True)
-    status = Column(Text, nullable=False)  # PENDING/PROCESSING/DONE/ERROR
+class Job(Base):
+    __tablename__ = "jobs"
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    empresa_id = Column(Integer, ForeignKey("empresas.id", ondelete="CASCADE"), nullable=False, index=True)
+    sha256 = Column(String, nullable=False, index=True)
+    filename = Column(String, nullable=False)
+    mime_type = Column(String, nullable=True)
+    status = Column(String, default="PENDING", nullable=False)  # PENDING | PROCESSING | DONE | ERROR
+    records_count = Column(Integer, default=0, nullable=False)
+    invoices_count = Column(Integer, default=0, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
-    empresa = relationship("Empresa", back_populates="load_files")
-    errors = relationship("LoadError", back_populates="load_file")
+    empresa = relationship("Empresa", back_populates="jobs")
 
-class LoadError(Base):
-    __tablename__ = "load_error"
-    id = Column(String, primary_key=True, default=gen_uuid)
-    load_file_id = Column(String, ForeignKey("load_file.id"), nullable=False)
-    xml_name = Column(Text, nullable=True)
-    code = Column(Text, nullable=True)
-    message = Column(Text, nullable=True)
-    context = Column(Text, nullable=True)  # JSON as text for SQLite simplicity
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    load_file = relationship("LoadFile", back_populates="errors")
+    __table_args__ = (
+        UniqueConstraint("empresa_id", "sha256", name="uq_jobs_empresa_sha"),
+    )
