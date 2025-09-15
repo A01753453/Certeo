@@ -1,6 +1,13 @@
 import hashlib
+from typing import BinaryIO
 
-def sha256_bytes(data: bytes) -> str:
-    h = hashlib.sha256()
-    h.update(data)
-    return h.hexdigest()
+CHUNK_SIZE = 1024 * 1024  # 1 MiB
+
+def sha256_stream(fp: BinaryIO) -> str:
+    hasher = hashlib.sha256()
+    while True:
+        chunk = fp.read(CHUNK_SIZE)
+        if not chunk:
+            break
+        hasher.update(chunk)
+    return hasher.hexdigest()
