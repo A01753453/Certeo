@@ -1,10 +1,18 @@
-import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+from app.config import settings
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./copiloto.db")
-connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+sqlite_kwargs = {}
+if settings.DATABASE_URL.startswith("sqlite"):
+    sqlite_kwargs = {"connect_args": {"check_same_thread": False}}
 
-engine = create_engine(DATABASE_URL, echo=False, future=True, connect_args=connect_args)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, future=True)
+engine = create_engine(settings.DATABASE_URL, **sqlite_kwargs)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
