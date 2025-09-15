@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" Version="4.0" Fecha="2024-01-01T12:00:00" Moneda="MXN" TipoDeComprobante="I" SubTotal="100.00" Total="116.00" LugarExpedicion="01000">
+  <cfdi:Emisor Rfc="AAA010101AAA" Nombre="Emisor Demo" RegimenFiscal="601"/>
+  <cfdi:Receptor Rfc="BBB010101BBB" Nombre="Receptor Demo" UsoCFDI="G03" RegimenFiscalReceptor="601" DomicilioFiscalReceptor="01000"/>
+  <cfdi:Conceptos>
+    <cfdi:Concepto ClaveProdServ="01010101" Cantidad="1" ClaveUnidad="H87" Descripcion="Servicio demo" ValorUnitario="100.00" Importe="100.00">
+      <cfdi:Impuestos>
+        <cfdi:Traslados>
+          <cfdi:Traslado Base="100.00" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="16.00"/>
+        </cfdi:Traslados>
+      </cfdi:Impuestos>
+    </cfdi:Concepto>
+  </cfdi:Conceptos>
+  <cfdi:Complemento>
+    <tfd:TimbreFiscalDigital xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="1.1" UUID="123e4567-e89b-12d3-a456-426614174000" FechaTimbrado="2024-01-01T12:01:00" RfcProvCertif="AAA010101AAA" SelloSAT="SELLOSAT"/>
+  </cfdi:Complemento>
+</cfdi:Comprobante>
